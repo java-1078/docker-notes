@@ -9,7 +9,7 @@ A: Like the way we have used openjdk base image for application container
     creation we have to get images for all three from the docker hub.
     Just google docker with the name beside it, it'll direct you to docker hub.
     Go to the tags, just select one of those and to the right we can see the command provided.
-    It'll be like "docker pull image-name:version-name" for example "docker pull postgres:14.18-alpine".
+    It'll be like "docker pull image-name:version-name" for example "docker pull postgres:17.5-alpine".
     Then you can check in 2 ways 1) Open terminal and enter command "docker images", we can see that image.
     By the way we are supposed to run all these containers in docker right, in docker to make these containers
     run and have communication between them we are supposed to run all these in the same network.
@@ -71,14 +71,19 @@ A: Config-server, eureka-service-registry. So add Dockerfiles to both of these p
    ./gradle clean build
    Here clean will make sure that the build .jar will be the one with updated code.
    Now gradle build is done, next docker build has to be done to create the image.
+
    docker build -t config-server:1.0.0 .
+   docker build -t eureka-service-registry:1.0.0 .
+   docker build -t fund-transfer-service:1.0.0 .
    This above command will generate the image. "-t" is the tag(imageName+version) and "." will represent the current directory(where docker
    file is present). If the docker file is present in another location you can mention the that location.
 
    Next step is to create containers (run command for all these, important step)
-   docker run --network my-network -d --name fund-transfer-service -p 8081:8080 fund-transfer-service:1.0.0
+
    docker run --network my-network --name config-server -p 8889:8888 -d config-server:1.0.0
    docker run --network my-network -d --name eureka-service-registry -p 8762:8761 eureka-service-registry:1.0.0
+   docker run --network my-network -d --name fund-transfer-service -p 8081:8080 fund-transfer-service:1.0.0
+
    Here, in all these commands -d -> detach mode.
    -p my-local-system-port-number:container-port-number
    eureka-service-registry:1.0.0 -> Image name
