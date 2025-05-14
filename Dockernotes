@@ -1,0 +1,120 @@
+Till now we have done docker container creation for the individual application.
+
+So what are the requirements for the application container?
+A: The dependencies which our container has while creating it.
+   So Config-server, eureka-server and also Postgres. All these three
+   should be available for the container to run successfully.
+How can we do that?
+A: Like the way we have used openjdk base image for application container
+    creation we have to get images for all three from the docker hub.
+    Just google docker with the name beside it, it'll direct you to docker hub.
+    Go to the tags, just select one of those and to the right we can see the command provided.
+    It'll be like "docker pull image-name:version-name" for example "docker pull postgres:14.18-alpine".
+    Then you can check in 2 ways 1) Open terminal and enter command "docker images", we can see that image.
+    By the way we are supposed to run all these containers in docker right, in docker to make these containers
+    run and have communication between them we are supposed to run all these in the same network.
+
+How to create a network in docker?
+Enter this command in IntelliJ console or in the command prompt(windows)/ terminal(macOS)
+"docker network create --driver bridge my-network ". Here my network name is my-network.
+
+
+Postgres image is created, but when creating the container how can we pass username, password
+so that Postgres container can have those authentication details?
+A: When running the postgres container in the CLI we are passing those.
+    docker run --name postgres-container -e POSTGRES_USER=sudheer -e POSTGRES_PASSWORD=my-pass -e POSTGRES_DB=banking-service --network my-network -d -p 5433:5432 postgres:17.5-alpine
+    Here i am creating the container with postgres:17.5-alpine tag(postgres- image name,17.5-alpine-version. tag is the combination of both).
+    --name will name the image that we pass, or else it'll create names on its own. -e means the environment variables.
+    This is where we pass the username, password. So -e POSTGRES_USER=sudheer -e POSTGRES_PASSWORD=my-pass -e POSTGRES_DB=banking-service.
+    These are username, password, batabase name. As we have created the network above we are supposed to run this container on the same. So,
+    --network my-network will be used here. "-d" mentions the detach mode. -p 5433:5432 mentions the port numbers of the container and the local system.
+
+Understand the port numbers passed for the containers--
+A: -p 5433:5432. Here Docker is running on our machine(macBook/windows) so it represents our machine.
+    But the containers are the Virtual machines that are available to docker right, so here we are telling that
+    5433 is the port number on my machine(machine) which I use to connect with the Virtual machine(Container) where the container port is 5432.
+    So our system 5433 is connected to containers 5432. We can specify any port number to our machine, just to understand I have used different
+    port numbers.
+
+Postgres container is visible, what's the next step?
+A: So we have created the postgres container successfully, we can check with Dbeaver as we are already using that. Go to the Dbeaver, in the left panel
+   in the blank space, double-click -> create -> Connection -> PostgreSQL. Port number will be 5433 because that is what i have specified to the
+   container. username and password will be the same that we have passed during the container creation. After entering all these details press
+   "test Connection ...". It'll show the connection status.
+
+Okay, now we have postgres container working fine, what else do we need?
+A: Config-server, eureka-service-registry. So add Dockerfiles to both of these projects.
+   Dockerfile in config-server:
+   FROM openjdk:17-jdk-slim
+   WORKDIR /app
+   EXPOSE 8888
+   COPY build/libs/config-server-0.0.1-SNAPSHOT.jar /app/config-server.jar
+   ENTRYPOINT ["java","-jar","config-server.jar"]
+
+   Dockerfile in eureka-service-registry:
+   FROM openjdk:17-jdk-slim
+   WORKDIR /app
+   EXPOSE 8761
+   COPY build/libs/eureka-service-registry-0.0.1-SNAPSHOT.jar /app/eureka-service-registry.jar
+   ENTRYPOINT ["java","-jar","eureka-service-registry.jar"]
+
+   Dockerfile in fund-transfer-service:
+   FROM openjdk:17-jdk-slim
+   WORKDIR /app
+   EXPOSE 8080
+   COPY build/libs/fund-transfer-service-0.0.1-SNAPSHOT.jar /app/fund-transfer-service.jar
+   ENTRYPOINT ["java","-jar","fund-transfer-service.jar"]
+
+   now for all three(eureka-service-registry, config-server and "your"-applicatiton):
+   we first need to gradle clean and build the .jar files, because that's what dockerfile is mentioning to create the image.
+   so first command in the termina/IntelliJ console
+   ./gradle clean build
+   Here clean will make sure that the build .jar will be the one with updated code.
+   Now gradle build is done, next docker build has to be done to create the image.
+   docker build -t config-server:1.0.0 .
+   This above command will generate the image. "-t" is the tag(imageName+version) and "." will represent the current directory(where docker
+   file is present). If the docker file is present in another location you can mention the that location.
+
+   Next step is to create containers (run command for all these, important step)
+   docker run --network my-network -d --name fund-transfer-service -p 8081:8080 fund-transfer-service:1.0.0
+   docker run --network my-network --name config-server -p 8889:8888 -d config-server:1.0.0
+   docker run --network my-network -d --name eureka-service-registry -p 8762:8761 eureka-service-registry:1.0.0
+   Here, in all these commands -d -> detach mode.
+   -p my-local-system-port-number:container-port-number
+   eureka-service-registry:1.0.0 -> Image name
+   So Images are also created.
+   If there are any issues after this phase you can go to the image and select the tab "Logs"(1st one). Where you can see the logs of output just
+   like in IntelliJ. Also keep in mind that any changes in the applications will lead to .jar creation, image creation, container creation.
+   All these steps need to done again.
+
+   After successful containers creation, we can check with postman. Generally when running on my local system my url is
+   "http://localhost:8080/api/v1/transfer".
+   But i have change the port number right so now the postman url will be: "http://localhost:8081/api/v1/transfer".
+   The port number is changed to 8081. You can also check for eureka service registry on the browser localhost://8762. Where the eureka-container
+   will be visible.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
