@@ -19,6 +19,8 @@ Enter this command in IntelliJ console or in the command prompt(windows)/ termin
 "docker network create --driver bridge my-network ". Here my network name is my-network.
 
 
+docker pull postgres:17.5-alpine
+
 Postgres image is created, but when creating the container how can we pass username, password
 so that Postgres container can have those authentication details?
 A: When running the postgres container in the CLI we are passing those.
@@ -94,7 +96,7 @@ A: Config-server, eureka-service-registry. So add Dockerfiles to both of these p
 
    After successful containers creation, we can check with postman. Generally when running on my local system my url is
    "http://localhost:8080/api/v1/transfer".
-   But i have change the port number right so now the postman url will be: "http://localhost:8081/api/v1/transfer".
+   But i have changed the port number right so now the postman url will be: "http://localhost:8081/api/v1/transfer".
    The port number is changed to 8081. You can also check for eureka service registry on the browser localhost://8762. Where the eureka-container
    will be visible.
 
